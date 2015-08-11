@@ -1,4 +1,20 @@
 {
+  "name": "mancala",
+  "version": "0.0.0",
+  "description": "Classic mancala game in the browser",
+  "homepage": "https://github.com/sheabunge/mancala",
+  "scripts": {
+    "test": "grunt jshint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sheabunge/mancala.git"
+  },
+  "author": "Shea Bunge <info@bungeshea.com> (http://bungeshea.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sheabunge/mancala/issues"
+  },
   "devDependencies": {
     "autoprefixer-core": "^5.2.1",
     "cssnano": "^2.1.1",
