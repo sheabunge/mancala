@@ -1,7 +1,28 @@
 
+*, *::before, *::after {
+	box-sizing: inherit;
+}
+
+html {
+	font-size: 20px;
+	box-sizing: border-box;
+}
+
 body {
 	text-align: center;
-	font-family: sans-serif;
+	color: #555;
+	background: radial-gradient(circle, #fff 15%, #ccc);
+	background-size: cover;
+	font-size: 1rem;
+	font-family: Roboto Slab, sans-serif;
+	margin-top: 1em;
+}
+
+h1 {
+	font-family: Fontdiner Swanky, sans-serif;
+	font-size: 2rem;
+	letter-spacing: 4px;
+	margin: 0;
 }
 
 .board {
