@@ -1,0 +1,87 @@
+
+body {
+	text-align: center;
+}
+
+.board {
+	margin: 5em auto 0;
+	display: flex;
+	flex-flow: row;
+	border: 1px solid #bbb;
+	box-shadow: 0 0 5px #bbb;
+	width: 930px;
+	height: 235px;
+	max-width: 100%;
+	resize: both;
+	overflow-x: auto;
+	background: url(../images/wood.png);
+	border-radius: 20px;
+
+	&, p {
+		transform: rotate(0deg);
+		transition: transform 3s ease 0s;
+	}
+
+	[data-player="two"] &,
+	[data-player="two"] & p {
+		transform: rotate(180deg);
+	}
+}
+
+.rows {
+	flex: 7;
+	display: flex;
+	flex-direction: column;
+}
+
+.store {
+	flex: 1;
+	border-radius: 40px;
+}
+
+.row {
+	flex: 1;
+	display: flex;
+
+	&.player-two {
+		flex-direction: row-reverse;
+	}
+}
+
+.store, .pit {
+	margin: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(0,0,0,.15);
+	box-shadow: inset 0px 0px 2px rgba(0,0,0,.5);
+	cursor: default;
+
+	p {
+		cursor: inherit;
+	}
+
+	p::selection {
+		background: transparent;
+	}
+}
+
+.pit {
+	flex: 1;
+	border-radius: 40%;
+}
+
+[data-player="two"] .row.player-two .pit,
+[data-player="one"] .row.player-one .pit {
+	cursor: pointer;
+}
+
+[data-player="two"] .status,
+.store.player-two, .player-two .pit {
+	color: green;
+}
+
+[data-player="one"] .status,
+.store.player-one, .player-one .pit {
+	color: #0074D9;
+}
