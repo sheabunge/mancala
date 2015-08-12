@@ -27,7 +27,6 @@ module.exports = function(grunt) {
 
         jshint: {
             options: {
-                force: true,
                 smarttabs: true,
                 eqeqeq: true,
                 newcap: true,
