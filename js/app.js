@@ -83,7 +83,8 @@
 
 		/**
 		 * Perform the move for a player
-		 * @param {Number} starting_pit The ID of the pit to begin in
+		 * @param {Number}  starting_pit The ID of the pit to begin in
+		 * @param {Boolean}              false if the game is now over
 		 */
 		do_player_turn: function (starting_pit) {
 
@@ -91,10 +92,12 @@
 			var turn_over = this.move_stones(starting_pit);
 
 			// make sure that a player hasn't run out of stones
-			var game_over = this.check_for_win();
+			if (this.check_game_over()) {
+				return true;
+			}
 
 			// change the player if the current turn is ended
-			if ( turn_over && ! game_over ) {
+			if (turn_over) {
 				this.switch_turn();
 			}
 		},
@@ -169,9 +172,10 @@
 		},
 
 		/**
-		 * Check if the game has ended
+		 * Check if the game should end
+		 * @return {Boolean} Whether the game is over
 		 */
-		check_for_win: function () {
+		check_game_over: function () {
 
 			/**
 			 * Check if a row on the board is emptu
@@ -229,6 +233,7 @@
 	};
 
 	mancala.init();
+	var waiting_for_move = true;
 
 	/**
 	 * Initialize pit elements as
@@ -237,9 +242,12 @@
 	 */
 	var init_pits = function (player, row) {
 		var onclick = function () {
-			if (mancala.player === player) {
+			if (mancala.player === player && waiting_for_move) {
+				waiting_for_move = false;
 				var pit = parseInt(this.getAttribute('data-pit'));
-				mancala.do_player_turn(pit);
+				if (!mancala.do_player_turn(pit)) {
+					waiting_for_move = true;
+				}
 			}
 		};
 
