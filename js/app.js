@@ -1,75 +1,115 @@
 (function () {
 	'use strict';
 
-	NodeList.prototype.forEach = Array.prototype.forEach;
-
+	/**
+	 * @type {Object}
+	 */
 	window.mancala = {
 
+		/**
+		 * The player currently having a turn
+		 * @type {String}
+		 */
 		player: 'one',
-		game_over: false,
-
-		player_one_pits: document.querySelectorAll('.row.player-one .pit'),
-		player_two_pits: document.querySelectorAll('.row.player-two .pit'),
-
-		player_one_store: document.querySelector('.store.player-one'),
-		player_two_store: document.querySelector('.store.player-two'),
-
-		board: [],
 
 		/**
-		 * Build the board array with the current board configuration
+		 * Stores a flat array representation of the mancala board
+		 * @type {Array}
 		 */
-		update_board: function () {
-			// current player store
-			this.board[6] = this.player === 'two' ? this.player_two_store : this.player_one_store;
+		pits: [ 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 ],
 
-			// other player store
-			this.board[13] = this.player === 'two' ? this.player_one_store : this.player_two_store;
+		/**
+		 * Refresh the query selectors and update pit stones
+		 */
+		init: function () {
+			this.refresh_queries();
+			this.update_pits();
+		},
 
-			// current player pits
-			var current_player_pits = this.player === 'two' ? this.player_two_pits : this.player_one_pits;
-			for (var i = 0; i < 6; ++i) {
-				this.board[i] = current_player_pits[i];
+		/**
+		 * Run the query selectors for the pits
+		 */
+		refresh_queries: function () {
+			this.current_player_pits = document.querySelectorAll('.row.player-' + this.player + ' .pit p');
+			this.other_player_pits = document.querySelectorAll('.row.player-' + this.get_other_player() + ' .pit p');
+			this.current_player_store = document.querySelector('.store.player-' + this.player + ' p');
+			this.other_player_store = document.querySelector('.store.player-' + this.get_other_player() + ' p');
+		},
+
+		/**
+		 * Update the stones on the page
+		 */
+		update_pits: function () {
+
+			for (var i = 0; i <= 13; i++) {
+				this.update_pit(i);
+			}
+		},
+
+		/**
+		 * Update the number of stones in a pit
+		 * @param {Number} pit The pit ID
+		 */
+		update_pit: function (pit, stones) {
+
+			if (arguments.length === 2) {
+				this.pits[pit] = stones;
+			} else {
+				stones = this.pits[pit];
 			}
 
-			// other player pits
-			var other_player_pits = this.player === 'two' ? this.player_one_pits : this.player_two_pits;
-			for (i = 7; i < 13; ++i) {
-				this.board[i] = other_player_pits[i - 7];
+			if (stones === 0) {
+				stones = '';
+			}
+
+			if (pit === 6) {
+				this.current_player_store.textContent = stones;
+			} else if(pit === 13) {
+				this.other_player_store.textContent = stones;
+			} else if (pit < 6) {
+				this.current_player_pits[pit].textContent = stones;
+			} else if (pit > 6) {
+				this.other_player_pits[pit - 7].textContent = stones;
 			}
 		},
 
-		get_stones: function (pit) {
-			var stones = pit.querySelector('p').textContent;
-			return parseInt(stones);
+		/**
+		 * Retrieve the name of the player not currently having a turn
+		 * @return {string}
+		 */
+		get_other_player: function () {
+			return this.player === 'one' ? 'two' : 'one';
 		},
 
-		set_stones: function (pit, stones) {
-			pit.querySelector('p').textContent = stones;
-		},
-
-		add_stones: function (pit, stones) {
-			var el = pit.querySelector('p');
-			el.textContent = parseInt(el.textContent) + stones;
-		},
-
-		do_user_move: function (starting_pit) {
+		/**
+		 * Perform the move for a player
+		 * @param {Number} starting_pit The ID of the pit to begin in
+		 */
+		do_player_turn: function (starting_pit) {
 
 			// perform the player's action
-			var result = this.move_stones(starting_pit);
+			var turn_over = this.move_stones(starting_pit);
 
 			// make sure that a player hasn't run out of stones
-			this.check_for_win();
+			var game_over = this.check_for_win();
 
 			// change the player if the current turn is ended
-			if ( ! result && ! this.game_over ) {
+			if ( turn_over && ! game_over ) {
 				this.switch_turn();
 			}
 		},
 
+		/**
+		 * Change the user currently having a turn
+		 */
 		switch_turn: function () {
-			this.player = this.player === 'one' ? 'two' : 'one';
-			this.update_board();
+			this.player = this.get_other_player();
+
+			var player_one_pits = this.pits.slice(0, 7);
+			var player_two_pits = this.pits.slice(7, 14);
+			this.pits = player_two_pits.concat(player_one_pits);
+
+			this.init();
 
 			var player = this.player;
 			setTimeout(function () {
@@ -78,121 +118,137 @@
 			}, 700 );
 		},
 
+
+		/**
+		 * Distribute the stones from a pit around the board
+		 * @param  {Integer} starting_pit The pit to begin in
+		 * @return {Boolean}              Whether the user's turn has ended
+		 */
 		move_stones: function (starting_pit) {
-			this.update_board();
 
 			// return if pit has no stones
-			if (this.get_stones(this.board[starting_pit]) < 1) {
-				return true;
+			if (this.pits[starting_pit] < 1) {
+				return false;
 			}
 
 			// take stones out of pit
-			var stones = this.get_stones(this.board[starting_pit]);
-			this.set_stones(this.board[starting_pit], 0);
+			var stones = this.pits[starting_pit];
+			this.update_pit(starting_pit, 0);
 
 			var pointer = starting_pit;
 			while (stones > 0) {
 				++pointer;
 
+				// wrap around the board before reaching other player's store
 				if (pointer > 12) {
 					pointer = 0;
 				}
 
-				this.add_stones(this.board[pointer], 1);
+				this.pits[pointer]++;
 				stones--;
+				this.update_pit(pointer);
 			}
 
-			// set to point to the opposite pit
+			// the number of the pit opposite
 			var inverse_pointer = 12 - pointer;
 
 			// Check for capture
-			if (pointer < 6 && this.get_stones(this.board[pointer]) === 1 && this.get_stones(this.board[inverse_pointer]) > 0) {
+			if (pointer < 6 && this.pits[pointer] === 1 && this.pits[inverse_pointer] > 0) {
 
-				// Transfer this stone along with opposite pit's stones to store
-				this.add_stones(this.board[6], this.get_stones(this.board[inverse_pointer]) + 1);
+				// Transfer this pit's stones along with opposite pit's stones to store
+				this.pits[6] += this.pits[inverse_pointer] + 1;
+				this.update_pit(6);
 
 				// Clear the pits
-				this.set_stones(this.board[pointer], 0);
-				this.set_stones(this.board[inverse_pointer], 0);
+				this.update_pit(pointer, 0);
+				this.update_pit(inverse_pointer, 0);
 			}
 
-			// return true if the turn ended in storage pit
-			return pointer === 6;
+			// the user's turn ended if the stones did not end in the storage pit
+			return pointer !== 6;
 		},
 
+		/**
+		 * Check if the game has ended
+		 */
 		check_for_win: function () {
-			var that = this;
 
+			/**
+			 * Check if a row on the board is emptu
+			 * @param  {Array}  pits The pits to check
+			 * @return {Boolean}     true all of the pits contain no stones
+			 */
 			var is_row_empty = function (pits) {
-				for (var i = 0; i < pits.length; i++) {
-					if (that.get_stones(pits[i]) > 0) {
-						return false;
-					}
-				}
-
-				return true;
+				return pits.every(function (stones) {
+					return stones === 0;
+				});
 			};
 
-			var player_one_out = is_row_empty(this.player_one_pits);
-			var player_two_out = is_row_empty(this.player_two_pits);
+			var current_player_out = is_row_empty(mancala.pits.slice(0, 6));
+			var other_player_out = is_row_empty(mancala.pits.slice(7, 13));
 
-			// Take the stones from the non-empty row and add them to that player's store
-			if (! (player_one_out || player_two_out)) {
-				return;
+			// the game is not over if neither player has an empty row
+			if (! current_player_out && ! other_player_out) {
+				return false;
 			}
 
-			this.game_over = true;
 			document.body.classList.add('game-over');
 
-			var cleanup_row = function (store, pits) {
-				var store_stones = that.get_stones(store);
+			// Move the stones remaining in a player's row into their store
+			var pit;
 
-				pits.forEach(function (pit) {
-					store_stones += that.get_stones(pit);
-					that.set_stones(pit, 0);
-				});
+			if (current_player_out && ! other_player_out) {
+				for (pit = 7; pit < 13; pit++) {
+					this.pits[13] += this.pits[pit];
+					this.pits[pit] = 0;
+				}
 
-				that.set_stones(store, store_stones);
-			};
-
-			if (player_one_out && ! player_two_out) {
-				cleanup_row(this.player_two_store, this.player_two_pits);
-
-			} else if (! player_one_out && player_two_out) {
-				cleanup_row(this.player_one_store, this.player_one_pits);
+			} else if (other_player_out && ! current_player_out) {
+				for (pit = 0; pit < 6; pit++) {
+					this.pits[6] += this.pits[pit];
+					this.pits[pit] = 0;
+				}
 			}
+
+			this.update_pits();
 
 			var status = document.querySelector('.status');
 
 			// Determine which player holds the most stones
-			if (this.get_stones(this.player_one_store) > this.get_stones(this.player_two_store)) {
-				status.textContent = 'Player one wins!';
-			} else if (this.get_stones(this.player_two_store) > this.get_stones(this.player_one_store)) {
-				status.textContent = 'Player two wins!';
+			if (this.pits[6] > this.pits[13]) {
+				status.textContent = 'Player ' + this.player + ' wins!';
+			} else if (this.pits[13] > this.pits[6]) {
+				status.textContent = 'Player ' + this.get_other_player() + ' wins!';
 			} else {
 				status.textContent = 'Draw!';
 			}
+
+			this.player = '';
+			return true;
 		}
 	};
 
-	mancala.update_board();
+	mancala.init();
 
-	mancala.player_one_pits.forEach(function (pit, index) {
-		pit.setAttribute('data-pit', index);
-		pit.onclick = function () {
-			if (mancala.player === 'one' && ! mancala.game_over) {
-				mancala.do_user_move(this.getAttribute('data-pit'));
+	/**
+	 * Initialize pit elements as
+	 * @param  {string}   player The player who the row belongs to
+	 * @param  {NodeList} row    The pit elements to initialize
+	 */
+	var init_pits = function (player, row) {
+		var onclick = function () {
+			if (mancala.player === player) {
+				var pit = parseInt(this.getAttribute('data-pit'));
+				mancala.do_player_turn(pit);
 			}
 		};
-	});
 
-	mancala.player_two_pits.forEach(function (pit, index) {
-		pit.setAttribute('data-pit', index);
-		pit.onclick = function () {
-			if (mancala.player === 'two' && ! mancala.game_over) {
-				mancala.do_user_move(this.getAttribute('data-pit'));
-			}
-		};
-	});
+		for (var i = 0; i < row.length; i++) {
+			row[i].setAttribute('data-pit', i);
+			row[i].onclick = onclick;
+		}
+	};
 
+	init_pits('one', document.querySelectorAll('.row.player-one .pit'));
+	init_pits('two', document.querySelectorAll('.row.player-two .pit'));
 })();
