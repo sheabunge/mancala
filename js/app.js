@@ -99,7 +99,10 @@
 			// change the player if the current turn is ended
 			if (turn_over) {
 				this.switch_turn();
+				localStorage.setItem('player', this.player);
 			}
+
+			localStorage.setItem('stones', JSON.stringify(this.pits));
 		},
 
 		/**
@@ -231,6 +234,14 @@
 			return true;
 		}
 	};
+
+	if (localStorage.getItem('player')) {
+		mancala.player = localStorage.getItem('player');
+		mancala.pits = JSON.parse(localStorage.getItem('stones'));
+	} else {
+		localStorage.setItem('player', mancala.player);
+		localStorage.setItem('stones', JSON.stringify(mancala.pits));
+	}
 
 	mancala.init();
 	var waiting_for_move = true;
