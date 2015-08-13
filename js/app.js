@@ -270,4 +270,10 @@
 
 	init_pits('one', document.querySelectorAll('.row.player-one .pit'));
 	init_pits('two', document.querySelectorAll('.row.player-two .pit'));
+
+	document.querySelector('.new-game').onclick = function () {
+		localStorage.removeItem('player');
+		localStorage.removeItem('stones');
+		window.location.reload();
+	};
 })();
