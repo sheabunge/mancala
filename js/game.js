@@ -1,19 +1,19 @@
 var Game = (function () {
 	'use strict';
 
-	var Game = function () {
-		this.player = 'one';
-		this.pits = [ 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 ];
+	var Game = function (Mancala, current_player) {
+		this.mancala = new Mancala(this);
+		this.player = current_player === 'two' ? 'two' : 'one';
 	};
 
 	Game.prototype.load_game = function () {
 
 		if (localStorage.getItem('player')) {
 			this.player = localStorage.getItem('player');
-			this.pits = JSON.parse(localStorage.getItem('stones'));
+			this.mancala.stones = JSON.parse(localStorage.getItem('stones'));
 		} else {
 			localStorage.setItem('player', this.player);
-			localStorage.setItem('stones', JSON.stringify(this.pits));
+			localStorage.setItem('stones', JSON.stringify(this.mancala.stones));
 		}
 	};
 
@@ -52,9 +52,9 @@ var Game = (function () {
 	Game.prototype.update_pit = function (pit, stones) {
 
 		if (arguments.length === 2) {
-			this.pits[pit] = stones;
+			this.mancala.stones[pit] = stones;
 		} else {
-			stones = this.pits[pit];
+			stones = this.mancala.stones[pit];
 		}
 
 		if (stones === 0) {
@@ -88,7 +88,7 @@ var Game = (function () {
 	Game.prototype.do_player_turn = function (starting_pit) {
 
 		// perform the player's action
-		var turn_over = this.move_stones(starting_pit);
+		var turn_over = this.mancala.move_stones(starting_pit);
 
 		// make sure that a player hasn't run out of stones
 		if (this.check_game_over()) {
@@ -101,7 +101,7 @@ var Game = (function () {
 			localStorage.setItem('player', this.player);
 		}
 
-		localStorage.setItem('stones', JSON.stringify(this.pits));
+		localStorage.setItem('stones', JSON.stringify(this.mancala.stones));
 	};
 
 	/**
@@ -109,11 +109,7 @@ var Game = (function () {
 	 */
 	Game.prototype.switch_turn = function () {
 		this.player = this.get_other_player();
-
-		var player_one_pits = this.pits.slice(0, 7);
-		var player_two_pits = this.pits.slice(7, 14);
-		this.pits = player_two_pits.concat(player_one_pits);
-
+		this.mancala.flip_board();
 		this.init();
 
 		var player = this.player;
@@ -124,106 +120,24 @@ var Game = (function () {
 	};
 
 	/**
-	 * Distribute the stones from a pit around the board
-	 * @param  {Integer} starting_pit The pit to begin in
-	 * @return {Boolean}              Whether the user's turn has ended
-	 */
-	Game.prototype.move_stones = function (starting_pit) {
-
-		// return if pit has no stones
-		if (this.pits[starting_pit] < 1) {
-			return false;
-		}
-
-		// take stones out of pit
-		var stones = this.pits[starting_pit];
-		this.update_pit(starting_pit, 0);
-
-		var pointer = starting_pit;
-		while (stones > 0) {
-			++pointer;
-
-			// wrap around the board before reaching other player's store
-			if (pointer > 12) {
-				pointer = 0;
-			}
-
-			this.pits[pointer]++;
-			stones--;
-			this.update_pit(pointer);
-		}
-
-		// the number of the pit opposite
-		var inverse_pointer = 12 - pointer;
-
-		// Check for capture
-		if (pointer < 6 && this.pits[pointer] === 1 && this.pits[inverse_pointer] > 0) {
-
-			// Transfer this pit's stones along with opposite pit's stones to store
-			this.pits[6] += this.pits[inverse_pointer] + 1;
-			this.update_pit(6);
-
-			// Clear the pits
-			this.update_pit(pointer, 0);
-			this.update_pit(inverse_pointer, 0);
-		}
-
-		// the user's turn ended if the stones did not end in the storage pit
-		return pointer !== 6;
-	};
-
-	/**
 	 * Check if the game should end
 	 * @return {Boolean} Whether the game is over
 	 */
 	Game.prototype.check_game_over = function () {
+		var winner = this.mancala.check_winner();
 
-		/**
-		* Check if a row on the board is emptu
-		* @param  {Array}  pits The pits to check
-		* @return {Boolean}     true all of the pits contain no stones
-		*/
-		var is_row_empty = function (pits) {
-			return pits.every(function (stones) {
-				return stones === 0;
-			});
-		};
-
-		var current_player_out = is_row_empty(this.pits.slice(0, 6));
-		var other_player_out = is_row_empty(this.pits.slice(7, 13));
-
-		// the game is not over if neither player has an empty row
-		if (! current_player_out && ! other_player_out) {
+		if (winner < 0) {
 			return false;
 		}
 
 		document.body.classList.add('game-over');
-
-		// Move the stones remaining in a player's row into their store
-		var pit;
-
-		if (current_player_out && ! other_player_out) {
-			for (pit = 7; pit < 13; pit++) {
-				this.pits[13] += this.pits[pit];
-				this.pits[pit] = 0;
-			}
-
-		} else if (other_player_out && ! current_player_out) {
-			for (pit = 0; pit < 6; pit++) {
-				this.pits[6] += this.pits[pit];
-				this.pits[pit] = 0;
-			}
-		}
-
-		this.update_pits();
-
 		var status = document.querySelector('.status');
 
 		// Determine which player holds the most stones
-		if (this.pits[6] > this.pits[13]) {
-			status.textContent = 'Player ' + this.player + ' wins!';
-		} else if (this.pits[13] > this.pits[6]) {
-			status.textContent = 'Player ' + this.get_other_player() + ' wins!';
+		if (1 === winner) {
+			status.textContent = 'Player one wins!';
+		} else if (2 === winner) {
+			status.textContent = 'Player two wins!';
 		} else {
 			status.textContent = 'Draw!';
 		}

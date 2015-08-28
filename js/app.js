@@ -1,7 +1,7 @@
 var game = (function () {
 	'use strict';
 
-	var game = new Game();
+	var game = new Game(Mancala);
 	game.load_game();
 
 	game.init();

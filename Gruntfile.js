@@ -71,6 +71,7 @@ module.exports = function(grunt) {
                 },
                 files: {
                     'dist/app.js': [
+                        'js/mancala.js',
                         'js/game.js',
                         'js/app.js'
                     ],
