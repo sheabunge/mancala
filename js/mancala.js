@@ -17,6 +17,17 @@ var Mancala = (function () {
 		);
 	};
 
+	Mancala.prototype.update_pit = function (pit, stones) {
+
+		if (arguments.length === 2) {
+			this.stones[pit] = stones;
+		} else {
+			stones = this.stones[pit];
+		}
+
+		this.game.draw_stones(pit, stones);
+	};
+
 	/**
 	 * Distribute the stones from a pit around the board
 	 * @param  {Integer} starting_pit The pit to begin in
@@ -31,7 +42,7 @@ var Mancala = (function () {
 
 		// take stones out of pit
 		var stones = this.stones[starting_pit];
-		this.game.update_pit(starting_pit, 0);
+		this.update_pit(starting_pit, 0);
 
 		var pointer = starting_pit;
 		while (stones > 0) {
@@ -44,7 +55,7 @@ var Mancala = (function () {
 
 			this.stones[pointer]++;
 			stones--;
-			this.game.update_pit(pointer);
+			this.update_pit(pointer);
 		}
 
 		// the number of the pit opposite
@@ -55,11 +66,11 @@ var Mancala = (function () {
 
 			// Transfer this pit's stones along with opposite pit's stones to store
 			this.stones[6] += this.stones[inverse_pointer] + 1;
-			this.game.update_pit(6);
+			this.update_pit(6);
 
 			// Clear the pits
-			this.game.update_pit(pointer, 0);
-			this.game.update_pit(inverse_pointer, 0);
+			this.update_pit(pointer, 0);
+			this.update_pit(inverse_pointer, 0);
 		}
 
 		// the user's turn ended if the stones did not end in the storage pit
@@ -103,7 +114,7 @@ var Mancala = (function () {
 			}
 		}
 
-		this.game.update_pits();
+		this.game.draw_all_stones();
 
 		if (this.stones[6] > this.stones[13]) {
 			// current player wins

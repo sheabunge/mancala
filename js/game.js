@@ -22,7 +22,15 @@ var Game = (function () {
 	 */
 	Game.prototype.init = function () {
 		this.refresh_queries();
-		this.update_pits();
+		this.draw_all_stones();
+	};
+
+	/**
+	 * Retrieve the name of the player not currently having a turn
+	 * @return {string}
+	 */
+	Game.prototype.get_other_player = function () {
+		return this.player === 'one' ? 'two' : 'one';
 	};
 
 	/**
@@ -38,25 +46,19 @@ var Game = (function () {
 	/**
 	 * Update the stones on the page
 	 */
-	Game.prototype.update_pits = function () {
+	Game.prototype.draw_all_stones = function () {
 
 		for (var i = 0; i <= 13; i++) {
-			this.update_pit(i);
+			this.draw_stones(i, this.mancala.stones[i]);
 		}
 	};
 
 	/**
 	 * Update the number of stones in a pit
-	 * @param {Number} pit The pit ID
+	 * @param {Number} pit    The pit ID
+	 * @param {Number} stones The stones to draw
 	 */
-	Game.prototype.update_pit = function (pit, stones) {
-
-		if (arguments.length === 2) {
-			this.mancala.stones[pit] = stones;
-		} else {
-			stones = this.mancala.stones[pit];
-		}
-
+	Game.prototype.draw_stones = function (pit, stones) {
 		if (stones === 0) {
 			stones = '';
 		}
@@ -70,14 +72,6 @@ var Game = (function () {
 		} else if (pit > 6) {
 			this.other_player_pits[pit - 7].textContent = stones;
 		}
-	};
-
-	/**
-	 * Retrieve the name of the player not currently having a turn
-	 * @return {string}
-	 */
-	Game.prototype.get_other_player = function () {
-		return this.player === 'one' ? 'two' : 'one';
 	};
 
 	/**
