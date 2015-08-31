@@ -67,15 +67,20 @@ module.exports = function(grunt) {
         uglify: {
             dist: {
                 options: {
-                    sourceMap: true,
+                    sourceMap: true
                 },
                 files: {
                     'dist/app.js': [
-                        'js/mancala.js',
-                        'js/game.js',
-                        'js/save-manager.js',
+                        'js/mancala/mancala.js',
+                        'js/mancala/move-stones.js',
+                        'js/mancala/check-winner.js',
+
+                        'js/game/game.js',
+                        'js/game/draw-stones.js',
+                        'js/game/save-manager.js',
+
                         'js/app.js'
-                    ],
+                    ]
                 }
             }
         }
