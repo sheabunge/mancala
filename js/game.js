@@ -9,8 +9,12 @@ var Game = (function () {
 	Game.prototype.load_game = function () {
 
 		if (localStorage.getItem('player')) {
-			this.player = localStorage.getItem('player');
 			this.mancala.stones = JSON.parse(localStorage.getItem('stones'));
+
+			if ('two' === localStorage.getItem('player')) {
+				this.switch_turn();
+			}
+
 		} else {
 			localStorage.setItem('player', this.player);
 			localStorage.setItem('stones', JSON.stringify(this.mancala.stones));
