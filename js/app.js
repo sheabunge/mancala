@@ -33,8 +33,7 @@ var game = (function () {
 	init_pits('two', document.querySelectorAll('.row.player-two .pit'));
 
 	document.querySelector('.new-game').onclick = function () {
-		localStorage.removeItem('player');
-		localStorage.removeItem('stones');
+		game.reset_game();
 		window.location.reload();
 	};
 

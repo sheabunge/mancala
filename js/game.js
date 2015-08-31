@@ -1,3 +1,6 @@
+/**
+ * Main game class
+ */
 var Game = (function () {
 	'use strict';
 
@@ -10,40 +13,6 @@ var Game = (function () {
 	var Game = function (Mancala, current_player) {
 		this.mancala = new Mancala(this);
 		this.player = current_player === 'two' ? 'two' : 'one';
-	};
-
-	/**
-	 * Load the game state from localStorage
-	 */
-	Game.prototype.load_game = function () {
-
-		if (localStorage.getItem('current_player')) {
-			this.mancala.current_store = parseInt(localStorage.getItem('current_store'));
-			this.mancala.other_store = parseInt(localStorage.getItem('other_store'));
-
-			this.mancala.current_pits = JSON.parse(localStorage.getItem('current_pits'));
-			this.mancala.other_pits = JSON.parse(localStorage.getItem('other_pits'));
-
-			if ('two' === localStorage.getItem('current_player')) {
-				this.switch_turn();
-			}
-
-		} else {
-			this.save_game();
-		}
-	};
-
-	/**
-	 * Save the game state to localStorage
-	 */
-	Game.prototype.save_game = function () {
-		localStorage.setItem('current_player', this.player);
-
-		localStorage.setItem('current_store', JSON.stringify(this.mancala.current_store));
-		localStorage.setItem('other_store', JSON.stringify(this.mancala.other_store));
-
-		localStorage.setItem('current_pits', JSON.stringify(this.mancala.current_pits));
-		localStorage.setItem('other_pits', JSON.stringify(this.mancala.other_pits));
 	};
 
 	/**

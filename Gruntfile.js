@@ -73,6 +73,7 @@ module.exports = function(grunt) {
                     'dist/app.js': [
                         'js/mancala.js',
                         'js/game.js',
+                        'js/save-manager.js',
                         'js/app.js'
                     ],
                 }

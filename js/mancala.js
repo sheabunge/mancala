@@ -1,3 +1,6 @@
+/**
+ * Manages the mancala board
+ */
 var Mancala = (function () {
 	'use strict';
 
@@ -113,21 +116,21 @@ var Mancala = (function () {
 			this.game.draw_stones(pit);
 		}
 
-		// the number of the pit opposite
-		var opposite = 12 - pit;
+		// Invert the pit number (number of opposite pit in opponent's row)
+		var inverse = 5 - pit;
 
 		// Check for capture
-		if (pit < 6 && this.get_stones(pit) === 1 && this.get_stones(opposite) > 0) {
+		if (pit < 6 && this.current_pits[pit] === 1 && this.other_pits[inverse] > 0) {
 
 			// Transfer this pit's stones along with opposite pit's stones to store
-			this.current_store += this.get_stones(opposite) + 1;
+			this.current_store += this.other_pits[inverse] + 1;
 			this.game.draw_stones(6);
 
 			// Clear the pits
-			this.set_stones(pit, 0);
-			this.set_stones(opposite, 0);
+			this.current_pits[pit] = 0;
+			this.other_pits[inverse] = 0;
 			this.game.draw_stones(pit);
-			this.game.draw_stones(opposite);
+			this.game.draw_stones(12 - pit);
 		}
 
 		// the user's turn ended if the stones did not end in the storage pit
