@@ -1,24 +1,49 @@
 var Game = (function () {
 	'use strict';
 
+	/**
+	 * Initialise class
+	 * @param {Mancala} Mancala
+	 * @param {String} [current_player=one] The current player
+	 * @constructor
+	 */
 	var Game = function (Mancala, current_player) {
 		this.mancala = new Mancala(this);
 		this.player = current_player === 'two' ? 'two' : 'one';
 	};
 
+	/**
+	 * Load the game state from localStorage
+	 */
 	Game.prototype.load_game = function () {
 
-		if (localStorage.getItem('player')) {
-			this.mancala.stones = JSON.parse(localStorage.getItem('stones'));
+		if (localStorage.getItem('current_player')) {
+			this.mancala.current_store = parseInt(localStorage.getItem('current_store'));
+			this.mancala.other_store = parseInt(localStorage.getItem('other_store'));
 
-			if ('two' === localStorage.getItem('player')) {
+			this.mancala.current_pits = JSON.parse(localStorage.getItem('current_pits'));
+			this.mancala.other_pits = JSON.parse(localStorage.getItem('other_pits'));
+
+			if ('two' === localStorage.getItem('current_player')) {
 				this.switch_turn();
 			}
 
 		} else {
-			localStorage.setItem('player', this.player);
-			localStorage.setItem('stones', JSON.stringify(this.mancala.stones));
+			this.save_game();
 		}
+	};
+
+	/**
+	 * Save the game state to localStorage
+	 */
+	Game.prototype.save_game = function () {
+		localStorage.setItem('current_player', this.player);
+
+		localStorage.setItem('current_store', JSON.stringify(this.mancala.current_store));
+		localStorage.setItem('other_store', JSON.stringify(this.mancala.other_store));
+
+		localStorage.setItem('current_pits', JSON.stringify(this.mancala.current_pits));
+		localStorage.setItem('other_pits', JSON.stringify(this.mancala.other_pits));
 	};
 
 	/**
@@ -31,7 +56,7 @@ var Game = (function () {
 
 	/**
 	 * Retrieve the name of the player not currently having a turn
-	 * @return {string}
+	 * @return {String}
 	 */
 	Game.prototype.get_other_player = function () {
 		return this.player === 'one' ? 'two' : 'one';
@@ -51,42 +76,49 @@ var Game = (function () {
 	 * Update the stones on the page
 	 */
 	Game.prototype.draw_all_stones = function () {
+		var format = function (stones) {
+			return stones === 0 ? '' : stones;
+		};
 
-		for (var i = 0; i <= 13; i++) {
-			this.draw_stones(i, this.mancala.stones[i]);
+		this.current_player_store.textContent = format(this.mancala.current_store);
+		this.other_player_store.textContent = format(this.mancala.other_store);
+
+		for (var pit = 0; pit < 6; pit++) {
+			this.current_player_pits[pit].textContent = format(this.mancala.current_pits[pit]);
+			this.other_player_pits[pit].textContent = format(this.mancala.other_pits[pit]);
 		}
 	};
 
 	/**
 	 * Update the number of stones in a pit
-	 * @param {Number} pit    The pit ID
-	 * @param {Number} stones The stones to draw
+	 * @param {Number} pit The pit number
 	 */
-	Game.prototype.draw_stones = function (pit, stones) {
-		if (stones === 0) {
-			stones = '';
-		}
+	Game.prototype.draw_stones = function (pit) {
+		var format = function (stones) {
+			return stones === 0 ? '' : stones;
+		};
 
 		if (pit === 6) {
-			this.current_player_store.textContent = stones;
+			this.current_player_store.textContent = format(this.mancala.current_store);
 		} else if(pit === 13) {
-			this.other_player_store.textContent = stones;
+			this.other_player_store.textContent = format(this.mancala.other_store);
 		} else if (pit < 6) {
-			this.current_player_pits[pit].textContent = stones;
+			this.current_player_pits[pit].textContent = format(this.mancala.current_pits[pit]);
 		} else if (pit > 6) {
-			this.other_player_pits[pit - 7].textContent = stones;
+			pit -= 7;
+			this.other_player_pits[pit].textContent = format(this.mancala.other_pits[pit]);
 		}
 	};
 
 	/**
 	 * Perform the move for a player
-	 * @param {Number}  starting_pit The ID of the pit to begin in
-	 * @param {Boolean}              false if the game is now over
+	 * @param {Number} pit - The pit number chosen
+	 * @returns {Boolean} false if the game is now over
 	 */
-	Game.prototype.do_player_turn = function (starting_pit) {
+	Game.prototype.do_player_turn = function (pit) {
 
 		// perform the player's action
-		var turn_over = this.mancala.move_stones(starting_pit);
+		var turn_over = this.mancala.move_stones(pit);
 
 		// make sure that a player hasn't run out of stones
 		if (this.check_game_over()) {
@@ -96,10 +128,9 @@ var Game = (function () {
 		// change the player if the current turn is ended
 		if (turn_over) {
 			this.switch_turn();
-			localStorage.setItem('player', this.player);
 		}
 
-		localStorage.setItem('stones', JSON.stringify(this.mancala.stones));
+		this.save_game();
 	};
 
 	/**
@@ -119,7 +150,7 @@ var Game = (function () {
 
 	/**
 	 * Check if the game should end
-	 * @return {Boolean} Whether the game is over
+	 * @returns {Boolean} Whether the game is over
 	 */
 	Game.prototype.check_game_over = function () {
 		var winner = this.mancala.check_winner();

@@ -1,88 +1,149 @@
 var Mancala = (function () {
 	'use strict';
 
-	var Mancala = function (game, stones) {
-		stones = stones || [ 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0 ];
-		this.stones = stones;
+	/**
+	 * Initialise class
+	 * @param {Game} game
+	 */
+	var Mancala = function (game) {
 		this.game = game;
+
+		this.current_pits = [4, 4, 4, 4, 4, 4];
+		this.other_pits = [4, 4, 4, 4, 4, 4];
+		this.current_store = 0;
+		this.other_store = 0;
 	};
 
-	Mancala.prototype.set_stones = function (stones) {
-		this.stones = stones;
-	};
-
+	/**
+	 * Exchange the players' positions on the board
+	 */
 	Mancala.prototype.flip_board = function () {
-		this.stones = this.stones.slice(7, 14).concat(
-			this.stones.slice(0, 7)
-		);
+		var current_pits = this.current_pits;
+		this.current_pits = this.other_pits;
+		this.other_pits = current_pits;
+
+		var current_store = this.current_store;
+		this.current_store = this.other_store;
+		this.other_store = current_store;
 	};
 
-	Mancala.prototype.update_pit = function (pit, stones) {
+	/**
+	 * Retrieve the amount of stones in a pit
+	 * @param  {Number} pit The pit number
+	 * @return {Number}     The amount of stones
+	 */
+	Mancala.prototype.get_stones = function (pit) {
 
-		if (arguments.length === 2) {
-			this.stones[pit] = stones;
-		} else {
-			stones = this.stones[pit];
+		if (pit === 6) {
+			return this.current_store;
+		} else if (pit === 13) {
+			return this.other_store;
+		} else if (pit < 6) {
+			return this.current_pits[pit];
+		} else if (pit > 6) {
+			return this.other_pits[pit - 7];
 		}
 
-		this.game.draw_stones(pit, stones);
+		return NaN;
+	};
+
+	/**
+	 * Set the amount of stones in a pit
+	 * @param {Number} pit    The pit number
+	 * @param {Number} stones The amount of stones
+	 */
+	Mancala.prototype.set_stones = function (pit, stones) {
+
+		if (pit === 6) {
+			this.current_store = stones;
+		} else if (pit === 13) {
+			this.other_store = stpnes;
+		} else if (pit < 6) {
+			this.current_pits[pit] = stones;
+		} else if (pit > 6) {
+			this.other_pits[pit - 7] = stones;
+		}
+	};
+
+	/**
+	 * Adjust the amount of stones in a pit
+	 * @param {Number} pit    The pit number
+	 * @param {Number} stones The amount of stones
+	 */
+	Mancala.prototype.add_stones = function (pit, stones) {
+
+		if (pit === 6) {
+			this.current_store += stones;
+		} else if (pit === 13) {
+			this.other_store[pit] += stpnes;
+		} else if (pit < 6) {
+			this.current_pits[pit] += stones;
+		} else if (pit > 6) {
+			this.other_pits[pit - 7] += stones;
+		}
 	};
 
 	/**
 	 * Distribute the stones from a pit around the board
-	 * @param  {Integer} starting_pit The pit to begin in
-	 * @return {Boolean}              Whether the user's turn has ended
+	 * @param {Number} pit The pit to begin in
+	 * @return {Boolean} Whether the user's turn has ended
 	 */
-	Mancala.prototype.move_stones = function (starting_pit) {
+	Mancala.prototype.move_stones = function (pit) {
 
 		// return if pit has no stones
-		if (this.stones[starting_pit] < 1) {
+		if (this.get_stones(pit) < 1) {
 			return false;
 		}
 
 		// take stones out of pit
-		var stones = this.stones[starting_pit];
-		this.update_pit(starting_pit, 0);
+		var stones = this.get_stones(pit);
+		this.set_stones(pit, 0);
+		this.game.draw_stones(pit);
 
-		var pointer = starting_pit;
 		while (stones > 0) {
-			++pointer;
+			++pit;
 
 			// wrap around the board before reaching other player's store
-			if (pointer > 12) {
-				pointer = 0;
+			if (pit > 12) {
+				pit = 0;
 			}
 
-			this.stones[pointer]++;
+			this.add_stones(pit, 1);
 			stones--;
-			this.update_pit(pointer);
+			this.game.draw_stones(pit);
 		}
 
 		// the number of the pit opposite
-		var inverse_pointer = 12 - pointer;
+		var opposite = 12 - pit;
 
 		// Check for capture
-		if (pointer < 6 && this.stones[pointer] === 1 && this.stones[inverse_pointer] > 0) {
+		if (pit < 6 && this.get_stones(pit) === 1 && this.get_stones(opposite) > 0) {
 
 			// Transfer this pit's stones along with opposite pit's stones to store
-			this.stones[6] += this.stones[inverse_pointer] + 1;
-			this.update_pit(6);
+			this.current_store += this.get_stones(opposite) + 1;
+			this.game.draw_stones(6);
 
 			// Clear the pits
-			this.update_pit(pointer, 0);
-			this.update_pit(inverse_pointer, 0);
+			this.set_stones(pit, 0);
+			this.set_stones(opposite, 0);
+			this.game.draw_stones(pit);
+			this.game.draw_stones(opposite);
 		}
 
 		// the user's turn ended if the stones did not end in the storage pit
-		return pointer !== 6;
+		return pit !== 6;
 	};
 
+	/**
+	 * Check if a player has won
+	 * @return {Number} -1 for no win, 0 for draw, 1 for player one win, 2 for player two win
+	 */
 	Mancala.prototype.check_winner = function () {
 
 		/**
 		 * Check if a row on the board is empty
-		 * @param  {Array}  pits The pits to check
-		 * @return {Boolean}     true all of the pits contain no stones
+		 * @param {Array} pits The pits to check
+		 * @return {Boolean} true all of the pits contain no stones
 		 */
 		var is_row_empty = function (pits) {
 			return pits.every(function (stones) {
@@ -90,8 +151,8 @@ var Mancala = (function () {
 			});
 		};
 
-		var current_player_out = is_row_empty(this.stones.slice(0, 6));
-		var other_player_out = is_row_empty(this.stones.slice(7, 13));
+		var current_player_out = is_row_empty(this.current_pits);
+		var other_player_out = is_row_empty(this.other_pits);
 
 		// the game is not over if neither player has an empty row
 		if (! current_player_out && ! other_player_out) {
@@ -102,26 +163,28 @@ var Mancala = (function () {
 		var pit;
 
 		if (current_player_out && ! other_player_out) {
-			for (pit = 7; pit < 13; pit++) {
-				this.stones[13] += this.stones[pit];
-				this.stones[pit] = 0;
+			for (pit = 0; pit < 6; pit++) {
+				this.other_store += this.other_pits[pit];
+				this.other_pits[pit] = 0;
 			}
 
 		} else if (other_player_out && ! current_player_out) {
 			for (pit = 0; pit < 6; pit++) {
-				this.stones[6] += this.stones[pit];
-				this.stones[pit] = 0;
+				this.current_store += this.current_pits[pit];
+				this.current_pits[pit] = 0;
 			}
 		}
 
 		this.game.draw_all_stones();
 
-		if (this.stones[6] > this.stones[13]) {
+		if (this.current_store > this.other_store) {
 			// current player wins
 			return this.game.player === 'two' ? 2 : 1;
-		} else if (this.stones[13] > this.stones[6]) {
+
+		} else if (this.other_store > this.current_store) {
 			// other player wins
 			return this.game.player === 'two' ? 1 : 2;
+
 		} else {
 			return 0;
 		}

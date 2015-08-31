@@ -9,8 +9,8 @@ var game = (function () {
 
 	/**
 	 * Initialize pit elements as
-	 * @param  {string}   player The player who the row belongs to
-	 * @param  {NodeList} row    The pit elements to initialize
+	 * @param {String}   player The player who the row belongs to
+	 * @param {NodeList} row    The pit elements to initialize
 	 */
 	var init_pits = function (player, row) {
 		var onclick = function () {
@@ -23,9 +23,9 @@ var game = (function () {
 			}
 		};
 
-		for (var i = 0; i < row.length; i++) {
-			row[i].setAttribute('data-pit', i);
-			row[i].onclick = onclick;
+		for (var pit = 0; pit < row.length; pit++) {
+			row[pit].setAttribute('data-pit', pit);
+			row[pit].onclick = onclick;
 		}
 	};
 
