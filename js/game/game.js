@@ -44,7 +44,7 @@ var Game = (function () {
 	/**
 	 * Perform the move for a player
 	 * @param {Number} pit - The pit number chosen
-	 * @returns {Boolean} false if the game is now over
+	 * @returns {Boolean} true if the game is now over
 	 */
 	Game.prototype.do_player_turn = function (pit) {
 
@@ -53,6 +53,7 @@ var Game = (function () {
 
 		// make sure that a player hasn't run out of stones
 		if (this.check_game_over()) {
+			this.reset_game();
 			return true;
 		}
 
@@ -62,6 +63,7 @@ var Game = (function () {
 		}
 
 		this.save_game();
+		return false;
 	};
 
 	/**
